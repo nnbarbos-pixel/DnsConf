@@ -8,16 +8,31 @@ const bot = new Telegraf(BOT_TOKEN);
 
 const AVAILABLE_MODELS = {
   text: [
-    { id: 'claude-sonnet-5', name: 'Claude Sonnet 5' },
-    { id: 'claude-opus-5', name: 'Claude Opus 5' },
-    { id: 'claude-fable-5-1', name: 'Claude Fable 5.1' },
-    { id: 'gpt-6-astra', name: 'GPT 6 Astra' },
-    { id: 'gpt-6-sol', name: 'GPT 6 Sol' },
+    { id: 'claude-sonnet-5', name: '⚡️ Claude Sonnet 5', category: 'Claude' },
+    { id: 'claude-opus-5', name: '💎 Claude Opus 5', category: 'Claude' },
+    { id: 'claude-fable-5-1', name: '🔥 Claude Fable 5.1', category: 'Claude' },
+    { id: 'claude-fable-5', name: '🔥 Claude Fable 5', category: 'Claude' },
+    { id: 'claude-haiku-4-5', name: '🚀 Claude Haiku 4.5', category: 'Claude' },
+    { id: 'claude-sonnet-4-6', name: '⚡️ Claude Sonnet 4.6', category: 'Claude' },
+    { id: 'claude-opus-4-6', name: '💎 Claude Opus 4.6', category: 'Claude' },
+    { id: 'claude-opus-4-7', name: '💎 Claude Opus 4.7', category: 'Claude' },
+    { id: 'claude-opus-4-8', name: '💎 Claude Opus 4.8', category: 'Claude' },
+    { id: 'gpt-6-astra', name: '🌟 GPT-6 Astra', category: 'GPT' },
+    { id: 'gpt-6-sol', name: '☀️ GPT-6 Sol', category: 'GPT' },
+    { id: 'gpt-6-luna', name: '🌙 GPT-6 Luna', category: 'GPT' },
+    { id: 'gpt-5.6-sol', name: '☀️ GPT-5.6 Sol', category: 'GPT' },
+    { id: 'gpt-5.6-terra', name: '🌍 GPT-5.6 Terra', category: 'GPT' },
+    { id: 'gpt-5.6-luna', name: '🌙 GPT-5.6 Luna', category: 'GPT' },
+    { id: 'gpt-5.5', name: '⭐️ GPT-5.5', category: 'GPT' },
+    { id: 'gpt-5.4-mini', name: '⚡️ GPT-5.4 Mini', category: 'GPT' },
   ],
   image: [
-    { id: 'nano-banana-pro', name: 'Nano Banana Pro' },
-    { id: 'nano-banana-2', name: 'Nano Banana 2' },
-    { id: 'gpt-image-2', name: 'GPT Image 2' },
+    { id: 'nano-banana-pro', name: '💎 Nano Banana Pro (1K/2K/4K)' },
+    { id: 'nano-banana-2', name: '🎨 Nano Banana 2 (1K/2K/4K)' },
+    { id: 'nano-banana-2-lite', name: '⚡️ Nano Banana 2 Lite' },
+    { id: 'gpt-image-2-vip', name: '💎 GPT Image 2 VIP (1K/2K/4K)' },
+    { id: 'gpt-image-2.5', name: '🎨 GPT Image 2.5 (1K)' },
+    { id: 'gpt-image-2', name: '⚡️ GPT Image 2 (1K)' },
   ],
 };
 
@@ -401,17 +416,72 @@ bot.on('callback_query', async (ctx) => {
   else if (data === 'menu:text_models') {
     await ctx.answerCbQuery();
 
+    // Группируем модели по категориям
+    const claudeModels = AVAILABLE_MODELS.text.filter(m => m.category === 'Claude');
+    const gptModels = AVAILABLE_MODELS.text.filter(m => m.category === 'GPT');
+
     const keyboard = {
       inline_keyboard: [
-        ...AVAILABLE_MODELS.text.map((m) => [{
-          text: `📝 ${m.name}`,
+        ...claudeModels.slice(0, 5).map((m) => [{
+          text: m.name,
           callback_data: `model:${m.id}`
         }]),
+        [{ text: '➡️ Ещё Claude', callback_data: 'menu:text_models_claude2' }],
+        [{ text: '🔹 GPT модели', callback_data: 'menu:text_models_gpt' }],
         [{ text: '◀️ Назад', callback_data: 'menu:models' }]
       ]
     };
 
     await ctx.editMessageText(
+      '📝 *Текстовые модели Claude*\n\n' +
+      'Выбери модель для генерации текста:',
+      { parse_mode: 'Markdown', reply_markup: keyboard }
+    );
+  }
+
+  else if (data === 'menu:text_models_claude2') {
+    await ctx.answerCbQuery();
+
+    const claudeModels = AVAILABLE_MODELS.text.filter(m => m.category === 'Claude');
+
+    const keyboard = {
+      inline_keyboard: [
+        ...claudeModels.slice(5).map((m) => [{
+          text: m.name,
+          callback_data: `model:${m.id}`
+        }]),
+        [{ text: '◀️ Назад к Claude', callback_data: 'menu:text_models' }]
+      ]
+    };
+
+    await ctx.editMessageText(
+      '📝 *Текстовые модели Claude (продолжение)*\n\n' +
+      'Выбери модель:',
+      { parse_mode: 'Markdown', reply_markup: keyboard }
+    );
+  }
+
+  else if (data === 'menu:text_models_gpt') {
+    await ctx.answerCbQuery();
+
+    const gptModels = AVAILABLE_MODELS.text.filter(m => m.category === 'GPT');
+
+    const keyboard = {
+      inline_keyboard: [
+        ...gptModels.map((m) => [{
+          text: m.name,
+          callback_data: `model:${m.id}`
+        }]),
+        [{ text: '◀️ Назад к Claude', callback_data: 'menu:text_models' }]
+      ]
+    };
+
+    await ctx.editMessageText(
+      '📝 *Текстовые модели GPT*\n\n' +
+      'Выбери модель:',
+      { parse_mode: 'Markdown', reply_markup: keyboard }
+    );
+  }
       '📝 *Текстовые модели*\n\n' +
       'Выбери модель для генерации текста:',
       { parse_mode: 'Markdown', reply_markup: keyboard }
@@ -502,12 +572,17 @@ bot.on('text', async (ctx) => {
     return;
   }
 
+  // Показываем typing индикатор
+  await ctx.sendChatAction('typing');
   const statusMessage = await ctx.reply('⏳ Обрабатываю...');
 
   try {
     const isImageModel = userModel.startsWith('gpt-image-') || userModel.startsWith('nano-banana');
 
     if (isImageModel) {
+      // Показываем upload_photo индикатор
+      await ctx.sendChatAction('upload_photo');
+
       // Генерация изображения
       const response = await fetch(`${API_BASE_URL}/v1/images/generations`, {
         method: 'POST',
