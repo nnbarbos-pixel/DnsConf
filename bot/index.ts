@@ -271,7 +271,7 @@ bot.on('text', async (ctx) => {
   const statusMessage = await ctx.reply('⏳ Обрабатываю...');
 
   try {
-    const isImageModel = userModel.startsWith('gpt-image-') || userModel.startsWith('nano-banana-');
+    const isImageModel = userModel.startsWith('gpt-image-') || userModel.startsWith('nano-banana');
 
     if (isImageModel) {
       // Генерация изображения
