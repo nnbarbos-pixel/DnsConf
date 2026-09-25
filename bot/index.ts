@@ -330,11 +330,11 @@ bot.on('callback_query', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.editMessageText(
       '👥 *Реферальная программа*\n\n' +
-      `🎁 За каждого приглашенного: *3 бесплатных запроса*\n\n` +
+      `🎁 За каждого приглашенного: *1 бесплатный запрос*\n\n` +
       `📎 Ваша ссылка:\n` +
       `\`https://t.me/${ctx.me}?start=${user.referralCode}\`\n\n` +
       `👥 Приглашено: ${referrals.length} человек\n` +
-      `🎁 Получено запросов: ${referrals.length * 3}`,
+      `🎁 Получено запросов: ${referrals.length}`,
       { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 Главное меню', callback_data: 'menu:main' }]] } }
     );
   }
@@ -481,7 +481,7 @@ bot.on('text', async (ctx) => {
 
   const user = db.getUser(userId);
 
-  // Проверка баланса/подписки
+  // Проверка баланса/подписки - для подписки не проверяем баланс
   const hasSubscription = db.checkSubscription(userId);
   const hasFreeRequests = user.freeRequests > 0;
 
@@ -508,21 +508,7 @@ bot.on('text', async (ctx) => {
     const isImageModel = userModel.startsWith('gpt-image-') || userModel.startsWith('nano-banana');
 
     if (isImageModel) {
-      // Списание за картинку
-      const cost = calculateCost(userModel, 0, 0);
-
-      if (hasSubscription) {
-        db.useSubscriptionRequest(userId);
-      } else if (hasFreeRequests) {
-        user.freeRequests--;
-      } else if (!db.deductCost(userId, cost)) {
-        await ctx.deleteMessage(statusMessage.message_id);
-        await ctx.reply('❌ Недостаточно средств');
-        return;
-      }
-
-      db.logRequest({ userId, model: userModel, prompt: message, cost, timestamp: Date.now() });
-
+      // Генерация изображения
       const response = await fetch(`${API_BASE_URL}/v1/images/generations`, {
         method: 'POST',
         headers: {
@@ -547,8 +533,27 @@ bot.on('text', async (ctx) => {
       const imageUrl = result.data?.[0]?.url;
 
       if (imageUrl) {
+        // Списание за картинку ПОСЛЕ успешной генерации
+        const cost = calculateCost(userModel, 0, 0);
+
+        if (hasSubscription) {
+          db.useSubscriptionRequest(userId);
+        } else if (hasFreeRequests) {
+          user.freeRequests--;
+        } else {
+          if (!db.deductCost(userId, cost)) {
+            await ctx.deleteMessage(statusMessage.message_id);
+            await ctx.reply('❌ Недостаточно средств');
+            return;
+          }
+        }
+
+        db.logRequest({ userId, model: userModel, prompt: message, cost, timestamp: Date.now() });
+
         await ctx.deleteMessage(statusMessage.message_id);
-        await ctx.replyWithPhoto(imageUrl, { caption: `🎨 ${message}\n\n💰 Стоимость: ${cost.toFixed(4)}$` });
+        await ctx.replyWithPhoto(imageUrl, {
+          caption: `🎨 ${message}\n\n💰 Стоимость: $${cost.toFixed(4)}`
+        });
       } else {
         throw new Error('No image URL in response');
       }

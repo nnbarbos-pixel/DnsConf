@@ -96,7 +96,7 @@ export class Database {
     }
 
     user.referredBy = referralCode;
-    this.addFreeRequests(referrer.id, 3);
+    this.addFreeRequests(referrer.id, 1);
     return true;
   }
 
