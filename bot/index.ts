@@ -481,14 +481,7 @@ bot.on('callback_query', async (ctx) => {
       'Выбери модель:',
       { parse_mode: 'Markdown', reply_markup: keyboard }
     );
-  }
-      '📝 *Текстовые модели*\n\n' +
-      'Выбери модель для генерации текста:',
-      { parse_mode: 'Markdown', reply_markup: keyboard }
-    );
-  }
-
-  else if (data === 'menu:image_models') {
+  } else if (data === 'menu:image_models') {
     await ctx.answerCbQuery();
 
     const keyboard = {
